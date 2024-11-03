@@ -17,6 +17,7 @@ export default function RootLayout({
     <ClerkProvider dynamic>
       <html lang="en">
         <body>
+          
           {children}
         </body>
       </html>
