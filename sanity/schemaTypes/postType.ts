@@ -28,6 +28,7 @@ export const postType = defineType({
       type: 'image',
       options: {
         hotspot: true,
+        accept: 'image/*,video/*',
       },
       fields: [
         {
