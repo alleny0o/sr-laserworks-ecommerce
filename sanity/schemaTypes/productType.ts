@@ -1,16 +1,24 @@
-/* eslint-disable import/no-anonymous-default-export */
-import { TrolleyIcon, ImagesIcon } from "@sanity/icons";  // Import ImagesIcon for batch preview
-import { defineField } from "sanity";
+import { defineType, defineField } from "sanity";
+import { TrolleyIcon, ImagesIcon } from "@sanity/icons";
 
-export default {
-  name: 'product',
-  title: 'Product',
-  type: 'document',
+export const productType = defineType({
+  name: "product",
+  title: "Product",
+  type: "document",
   icon: TrolleyIcon,
   preview: {
     select: {
       title: 'name',
-      media: 'images.0'
+      media: 'mediaGroups.0.mediaItems.0',
+      mediaType: 'mediaGroups.0.mediaItems.0._type'
+    },
+    prepare(selection) {
+      const { title, media } = selection;
+      
+      return {
+        title,
+        media,
+      }
     }
   },
   fields: [
@@ -22,7 +30,7 @@ export default {
     }),
     defineField({
       name: 'description',
-      title: 'Description',
+      title: 'Description (optional)',
       type: 'blockContent',
     }),
     defineField({
@@ -33,105 +41,86 @@ export default {
     }),
     defineField({
       name: 'compareAtPrice',
-      title: 'Compare-At-Price',
+      title: 'Compare-At-Price (optional)',
       type: 'number',
-      validation: Rule => Rule.positive()
+      validation: Rule => [
+        Rule.positive().error('Must be a positive number'),
+        Rule.custom((compareAtPrice, context) => {
+          const price = context.document?.price;
+    
+          // Allow empty values
+          if (compareAtPrice === undefined || compareAtPrice === null) {
+            return true;
+          }
+    
+          // If no regular price, skip validation
+          if (!price) {
+            return true;
+          }
+    
+          // If the compare-at-price is not greater than the price, return an error message
+          return typeof price === 'number' && compareAtPrice > price 
+            ? true 
+            : 'Must be greater than price';
+        })
+      ]
     }),
     defineField({
-      name: 'mediaBatches',
-      title: 'Media Batches',
+      name: 'mediaGroups',
+      title: 'Media Groups',
       type: 'array',
-      validation: Rule => Rule.required().min(1),
+      validation: Rule => [
+        Rule.required().min(1).error('A minimum of ONE Media Group is required.'),
+        Rule.max(20).error('You have reached the cap of 20 media groups.'),
+      ],
       of: [{
         type: 'object',
-        title: 'Media Batch',
-        icon: ImagesIcon,  // Added icon for batch
+        title: 'Media Group',
+        icon: ImagesIcon,
         preview: {
           select: {
-            media: 'mediaItems'
+            mediaItems: 'mediaItems', 
           },
-          prepare({ media }) {
+          prepare(selection) {
             return {
-              title: `Batch with ${media?.length || 0} items`,
-              media: ImagesIcon
+              title: `Media Group with ${selection.mediaItems?.length || 0} item${selection.mediaItems?.length === 1 ? '' : 's'}`,
+              media: ImagesIcon,
             }
           }
         },
-        fields: [
-          {
-            name: 'mediaItems',
-            title: 'Media Items',
-            type: 'array',
-            options: {
-              layout: 'grid'
-            },
-            validation: Rule => Rule.required().min(1).max(10),
-            of: [
-              {
-                type: 'object',
-                fields: [
-                  {
-                    name: 'mediaType',
-                    title: 'Media Type',
-                    type: 'string',
-                    options: {
-                      list: [
-                        {title: 'Image', value: 'image'},
-                        {title: 'Video', value: 'video'}
-                      ],
-                      layout: 'radio'
-                    },
-                    initialValue: 'image'
-                  },
-                  {
-                    name: 'media',
-                    title: 'Image',
-                    type: 'image',
-                    options: { hotspot: true },
-                    hidden: ({parent}) => parent?.mediaType === 'video'
-                  },
-                  {
-                    name: 'video',
-                    title: 'Video',
-                    type: 'file',
-                    options: { 
-                      accept: 'video/*',
-                      storeOriginalFilename: true,
-                      // This enables video thumbnails
-                      metadata: ['thumbnail']
-                    },
-                    hidden: ({parent}) => parent?.mediaType === 'image'
-                  },
-                  {
-                    name: 'alt',
-                    type: 'string',
-                    title: 'Alternative text',
-                    validation: Rule => Rule.required()
-                  }
-                ],
-                preview: {
-                  select: {
-                    media: 'media',
-                    video: 'video',
-                    type: 'mediaType',
-                    title: 'alt'
-                  },
-                  prepare({ media, video, type, title }) {
-                    const mediaPreview = type === 'video' ? video : media;
-                    const icon = type === 'video' ? '🎥' : '📸';
-                    return {
-                      media: mediaPreview,
-                      title: `${title}`,
-                      // This adds the icon overlay
-                      subtitle: icon,
-                    }
-                  }
+        fields: [{
+          name: 'mediaItems',
+          title: 'Media Items',
+          type: 'array',
+          options: {
+            layout: 'grid'
+          },
+          validation: Rule => [
+            Rule.required().min(1).error('A minimum of ONE Media Item is required.'),
+            Rule.max(20).error('You have reached the cap of 20 Media Items.'),
+          ],
+          of: [
+            {
+              type: 'image',
+              title: 'Image',
+              options: { hotspot: true },
+              fields: [
+                {
+                  name: 'alt',
+                  type: 'string',
+                  title: 'Alternative text',
+                  validation: Rule => Rule.required()
                 }
-              }
-            ]
-          }
-        ]
+              ]
+            },
+            {
+              type: 'mux.video',
+              title: 'Video',
+              name: 'video',
+            }
+          ]
+        }]
       }]
-    }),
+    })
   ]
-}
+});
