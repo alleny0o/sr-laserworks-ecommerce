@@ -98,6 +98,19 @@ export const productType = defineType({
           validation: Rule => [
             Rule.required().min(1).error('A minimum of ONE Media Item is required.'),
             Rule.max(20).error('You have reached the cap of 20 Media Items.'),
+            Rule.custom((mediaItems) => {
+              // Ensure mediaItems is an array
+              if (!Array.isArray(mediaItems)) return true;
+            
+              const firstMedia = mediaItems[0];
+              
+              // Context parameter allows checking the field during reordering
+              if (firstMedia?._type === 'video') {
+                return 'The first media item cannot be a video. Please select an image first.';
+              }
+            
+              return true;
+            })
           ],
           of: [
             {
