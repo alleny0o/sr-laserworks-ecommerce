@@ -1,6 +1,21 @@
 import { defineType, defineField } from "sanity";
 import { TrolleyIcon, ImagesIcon } from "@sanity/icons";
 
+// Define our display format types
+const OPTION_DISPLAY = {
+  DROPDOWN: 'dropdown',
+  BUTTONS: 'buttons',
+  COLOR_SWATCH: 'colorSwatch',
+  IMAGES: 'images'
+} as const;
+
+type OptionDisplay = typeof OPTION_DISPLAY[keyof typeof OPTION_DISPLAY];
+
+// Define our option types
+interface Option {
+  name: string;
+};
+
 export const productType = defineType({
   name: "product",
   title: "Product",
@@ -82,10 +97,10 @@ export const productType = defineType({
     // MEDIA STUFF
     defineField({
       name: 'mediaGroups',
-      title: 'Media Groups',
+      title: 'Medias',
       type: 'array',
       validation: Rule => [
-        Rule.required(),
+        Rule.required().error('A minimum of ONE Media Group is required.'),
         Rule.min(1).error('A minimum of ONE Media Group is required.'),
         Rule.max(20).error('You have reached the cap of 20 media groups.'),
       ],
@@ -162,8 +177,34 @@ export const productType = defineType({
     // OPTIONS STUFF
     defineField({
       name: 'options',
-      title: 'Add Options',
+      title: 'Product Options',
       type: 'array',
+      validation: Rule => [
+        Rule.required(),
+        Rule.max(3).error('Maximum of 3 product options allowed.'),
+        Rule.custom((options: Option[] | undefined) => {
+          // Check if options is undefined
+          if (options === undefined) {
+            return 'Options must be an array.';
+          }
+        
+          // Check if options is not an array
+          if (!Array.isArray(options)) {
+            return 'Options must be an array.';
+          }
+        
+          const optionNames = options.map(option => option.name);
+          const uniqueOptionNames = new Set(optionNames);
+        
+          // Check for unique option names
+          if (optionNames.length !== uniqueOptionNames.size) {
+            const duplicateOptionNames = optionNames.filter((name, index) => optionNames.indexOf(name) !== index);
+            return 'Option Names must be unique. Duplicates: ' + duplicateOptionNames.join(', ') + ".";
+          }
+        
+          return true; // Validation successful
+        }),
+      ],
       of: [
         {
           type: 'object',
@@ -173,7 +214,21 @@ export const productType = defineType({
               name: 'name',
               title: 'Option Name',
               type: 'string',
-              validation: Rule => Rule.required()
+              validation: Rule => Rule.required().error('Option name cannot be empty.'),
+            },
+            {
+              name: 'displayFormat',
+              title: 'Display Format',
+              type: 'string',
+              options: {
+                list: [
+                  { title: 'Dropdown Menu', value: OPTION_DISPLAY.DROPDOWN },
+                  { title: 'Buttons', value: OPTION_DISPLAY.BUTTONS },
+                  { title: 'Color Swatch', value: OPTION_DISPLAY.COLOR_SWATCH },
+                  { title: 'Images', value: OPTION_DISPLAY.IMAGES }
+                ]
+              },
+              initialValue: OPTION_DISPLAY.DROPDOWN,
             },
             {
               name: 'values',
@@ -183,12 +238,27 @@ export const productType = defineType({
                 {
                   type: 'string',
                   title: 'Value',
+                  validation: Rule => Rule.required().error('Option values cannot be empty.')
                 }
               ],
               validation: Rule => [
                 Rule.required(),
                 Rule.min(1).error('A minimum of ONE option value is required.'),
                 Rule.max(30).error('You have reached the cap of 30 values.'),
+                Rule.custom((values) => {
+                  // Ensure values is an array
+                  if (!Array.isArray(values)) return true;
+                
+                  const uniqueValues = new Set(values);
+                
+                  // Check for unique values
+                  if (values.length !== uniqueValues.size) {
+                    const duplicateValues = values.filter((value, index) => values.indexOf(value) !== index);
+                    return 'Option Values must be unique. Duplicates: ' + duplicateValues.join(', ') + ".";
+                  }
+                
+                  return true; // Validation successful
+                }),
               ]
             }
           ]
