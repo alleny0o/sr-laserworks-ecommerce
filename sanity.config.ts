@@ -33,7 +33,7 @@ export default defineConfig({
     visionTool({defaultApiVersion: apiVersion}),
     muxInput(),
     simplerColorInput({
-      defaultColorFormat: 'rgba',
+      defaultColorFormat: 'hex',
       defaultColorList: [
         {label: 'Red', value: 'rgba(255, 0, 0, 1)'},
         {label: 'Green', value: 'rgba(0, 255, 0, 1)'},
