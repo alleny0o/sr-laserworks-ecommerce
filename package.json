@@ -26,6 +26,7 @@
     "react-dom": "19.0.0-rc-02c0e824-20241028",
     "sanity": "^3.62.3",
     "sanity-plugin-mux-input": "^2.3.6",
+    "sanity-plugin-simpler-color-input": "^3.0.0",
     "styled-components": "^6.1.13",
     "tailwind-merge": "^2.5.4",
     "tailwindcss-animate": "^1.0.7"

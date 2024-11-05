@@ -9,6 +9,12 @@ const OPTION_DISPLAY = {
 
 interface Option {
     name: string;
+    displayFormat?: string;
+    values?: Array<{
+        value: string;
+        color?: string;
+        image?: string;
+    }>;
 };
 
 export const optionsFields = [
@@ -60,6 +66,10 @@ export const optionsFields = [
             },
             initialValue: OPTION_DISPLAY.DROPDOWN,
           },
+
+
+
+          // Actual option values
           {
             name: 'values',
             title: 'Option Values',
