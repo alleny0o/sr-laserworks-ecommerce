@@ -22,6 +22,11 @@ export const productType = defineType({
     }
   },
   fields: [
+
+
+
+
+    // GENERAL STUFF
     defineField({
       name: 'name',
       title: 'Product Name',
@@ -33,6 +38,11 @@ export const productType = defineType({
       title: 'Description (optional)',
       type: 'blockContent',
     }),
+
+
+
+
+    // PRICING STUFF
     defineField({
       name: 'price',
       title: 'Price',
@@ -65,12 +75,18 @@ export const productType = defineType({
         })
       ]
     }),
+
+
+
+
+    // MEDIA STUFF
     defineField({
       name: 'mediaGroups',
       title: 'Media Groups',
       type: 'array',
       validation: Rule => [
-        Rule.required().min(1).error('A minimum of ONE Media Group is required.'),
+        Rule.required(),
+        Rule.min(1).error('A minimum of ONE Media Group is required.'),
         Rule.max(20).error('You have reached the cap of 20 media groups.'),
       ],
       of: [{
@@ -99,7 +115,8 @@ export const productType = defineType({
             layout: 'grid'
           },
           validation: Rule => [
-            Rule.required().min(1).error('A minimum of ONE Media Item is required.'),
+            Rule.required(),
+            Rule.min(1).error('A minimum of ONE Media Item is required.'),
             Rule.max(20).error('You have reached the cap of 20 Media Items.'),
             Rule.custom((mediaItems) => {
               // Ensure mediaItems is an array
@@ -133,10 +150,50 @@ export const productType = defineType({
               type: 'mux.video',
               title: 'Video',
               name: 'video',
+            },
+          ],
+        }],
+      }],
+    }),
+
+
+
+
+    // OPTIONS STUFF
+    defineField({
+      name: 'options',
+      title: 'Add Options',
+      type: 'array',
+      of: [
+        {
+          type: 'object',
+          title: 'Option',
+          fields: [
+            {
+              name: 'name',
+              title: 'Option Name',
+              type: 'string',
+              validation: Rule => Rule.required()
+            },
+            {
+              name: 'values',
+              title: 'Option Values',
+              type: 'array',
+              of: [
+                {
+                  type: 'string',
+                  title: 'Value',
+                }
+              ],
+              validation: Rule => [
+                Rule.required(),
+                Rule.min(1).error('A minimum of ONE option value is required.'),
+                Rule.max(30).error('You have reached the cap of 30 values.'),
+              ]
             }
           ]
-        }]
-      }]
-    })
-  ]
+        }
+      ]
+    }),
+  ],
 });
