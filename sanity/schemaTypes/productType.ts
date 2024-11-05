@@ -82,9 +82,12 @@ export const productType = defineType({
             mediaItems: 'mediaItems', 
           },
           prepare(selection) {
+            const { mediaItems } = selection;
+            const media = mediaItems && mediaItems.length > 0 ? mediaItems[0] : ImagesIcon;
+
             return {
-              title: `Media Group with ${selection.mediaItems?.length || 0} item${selection.mediaItems?.length === 1 ? '' : 's'}`,
-              media: ImagesIcon,
+              title: `Media group with ${selection.mediaItems?.length || 0} item${selection.mediaItems?.length === 1 ? '' : 's'}`,
+              media: media,
             }
           }
         },
