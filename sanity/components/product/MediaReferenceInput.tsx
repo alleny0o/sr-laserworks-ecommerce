@@ -11,10 +11,12 @@ interface MediaItem {
 
 interface MediaGroup {
   _key: string;
+  name?: string
   mediaItems: MediaItem[];
 }
 
 export function MediaReferenceInput(props: StringInputProps) {
+
   const { onChange, value } = props;
   
   // Get all media groups
@@ -29,15 +31,15 @@ export function MediaReferenceInput(props: StringInputProps) {
     // If there's more than one media group, create options for groups
     if (mediaGroups.length > 1) {
       return mediaGroups.map((group) => ({
-        value: `group-${group._key}`,
-        title: `Media Group (${group.mediaItems.length} items)`
+        value: `${group._key}`,
+        title: `Media Group (Name: ${group.name || 'Unnamed'})`
       }));
     }
 
     // If there's exactly one group, create options for individual media items
     if (mediaGroups.length === 1) {
       return mediaGroups[0].mediaItems.map((item, index) => ({
-        value: `item-${item._key}`,
+        value: `${item._key}`,
         title: `Media ${index + 1} - ${item._type === 'image' ? 'Image' : 'Video'}`
       }));
     }
