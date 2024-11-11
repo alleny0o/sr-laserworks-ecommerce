@@ -7,9 +7,6 @@ import { pricingFields } from "../schemas/product/pricing";
 import { mediaFields } from "../schemas/product/media";
 import { optionsFields } from "../schemas/product/options";
 
-
-
-
 export const productType = defineType({
   name: "product",
   title: "Product",
