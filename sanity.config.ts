@@ -35,11 +35,10 @@ export default defineConfig({
     simplerColorInput({
       defaultColorFormat: 'hex',
       defaultColorList: [
-        {label: 'Red', value: 'rgba(255, 0, 0, 1)'},
-        {label: 'Green', value: 'rgba(0, 255, 0, 1)'},
-        {label: 'Blue', value: 'rgba(0, 0, 255, 1)'},
-        {label: 'Black', value: 'rgba(0, 0, 0, 1)'},
-        {label: 'White', value: 'rgba(255, 255, 255, 1)'},
+        { label: 'Light', value: '#ffffff' },
+        { label: 'Dark', value: '#333333' },
+        { label: 'Brand', value: '#ca786d' },
+        { label: 'Accent', value: '#626754' },
         {label: 'Custom...', value: 'custom'},
       ],
       enableSearch: true,
