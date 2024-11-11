@@ -92,8 +92,10 @@ interface VariantOption {
     _key: string;
     _type: 'variant';
     variantName: string;
+    variantProductName: string;
+    variantPrice: number;
     options: VariantOption[];
-    quantity: number;
+    variantQuantity: number;
   }
 
 
@@ -102,8 +104,10 @@ export function GenerateVariants(props: ArrayOfObjectsInputProps) {
 
     const documentId = useFormValue(['_id']) as string;
     const publishedDocumentId = documentId.includes('draft.') ? documentId.replace('draft.', '') : documentId;
+    const variantProductName = useFormValue(['name']) as string;
 
     const variantOptions = useFormValue(['options']) as Option[];
+    const variantPrice = useFormValue(['price']) as number;
 
     const cartesianProduct = (arr: { name: string; value: string; }[][]): { name: string; value: string; }[][] => {
         return arr.reduce<{ name: string; value: string; }[][]>((a, b) => {
@@ -112,7 +116,7 @@ export function GenerateVariants(props: ArrayOfObjectsInputProps) {
     };
 
     const generateVariantName = (variantOptions: { name: string; value: string; }[]) => {
-        return variantOptions.map(option => `${option.name}: ${option.value}`).join(', ');
+        return variantOptions.map(option => `${option.value}`).join(' - ');
     };
 
     const handleClick = useCallback(() => {
@@ -143,7 +147,9 @@ export function GenerateVariants(props: ArrayOfObjectsInputProps) {
           _type: 'variant' as const,
           _key: variantKey,
           options: optionsWithKeys,
-          quantity: 0
+          variantQuantity: 0,
+          variantProductName,
+          variantPrice,
         } satisfies Variant;
     });
 
@@ -158,7 +164,7 @@ export function GenerateVariants(props: ArrayOfObjectsInputProps) {
     // Then set the new variants
     onChange([setIfMissing([]), ...variantPatches]);
 
-    }, [onChange, publishedDocumentId, variantOptions]);
+    }, [onChange, publishedDocumentId, variantOptions, variantProductName, variantPrice]);
 
     // Clear out existing variants
     const handleClear = useCallback(() => {
