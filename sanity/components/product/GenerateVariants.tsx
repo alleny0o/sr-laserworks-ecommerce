@@ -94,8 +94,9 @@ interface VariantOption {
     variantName: string;
     variantProductName: string;
     variantPrice: number;
+    variantStock: number;
     options: VariantOption[];
-    variantQuantity: number;
+    variantMaxOrderQuantity: number;
   }
 
 
@@ -147,9 +148,10 @@ export function GenerateVariants(props: ArrayOfObjectsInputProps) {
           _type: 'variant' as const,
           _key: variantKey,
           options: optionsWithKeys,
-          variantQuantity: 0,
+          variantMaxOrderQuantity: 1,
           variantProductName,
           variantPrice,
+          variantStock: 0,
         } satisfies Variant;
     });
 

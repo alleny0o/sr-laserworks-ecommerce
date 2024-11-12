@@ -4,7 +4,7 @@ import { Box, Stack, Select } from '@sanity/ui';
 import { StringInputProps, set, unset, useFormValue } from 'sanity';
 
 interface MediaItem {
-  _type: 'image' | 'mux.video';
+  _type: 'image' | 'video';
   _key: string;
   alt?: string;
 }

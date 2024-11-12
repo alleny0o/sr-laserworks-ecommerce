@@ -1,5 +1,7 @@
 import { defineField, Rule } from "sanity";
 import {ColorWheelIcon, ImagesIcon, ThListIcon, PlayIcon, UlistIcon} from '@sanity/icons';
+import { IoIosColorFill } from "react-icons/io";
+
 
 // Types
 interface OptionValue {
@@ -160,7 +162,14 @@ const colorOption = defineField({
         preview: {
           select: {
             title: 'value',
-            subtitle: 'color.value'
+            subtitle: 'color.value',
+          },
+          prepare({ title, subtitle }) {
+            return {
+              title,
+              subtitle: subtitle ? `Color: ${subtitle}` : 'No color selected',
+              media: IoIosColorFill, 
+            };
           }
         }
       })]
