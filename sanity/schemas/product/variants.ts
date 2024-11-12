@@ -4,8 +4,6 @@ import { defineField, defineArrayMember } from "sanity";
 import { VscCombine } from "react-icons/vsc";
 import { GrSettingsOption } from "react-icons/gr";
 
-
-
 export const variantsFields = [
   defineField({
     name: "variants",
@@ -78,43 +76,53 @@ export const variantsFields = [
             title: "SKU",
             type: "string",
             validation: (Rule) => [
-              Rule.required(),
-              Rule.max(16).error("SKU must be at maximum 16 characters"),
-              Rule.regex(/^[a-zA-Z0-9-]*$/).error(
-                "SKU can only contain letters, numbers, and hyphens"
-              ),
-              Rule.custom(async (sku, context) => {
-                if (!sku || typeof sku !== "string") return true;
-
-                const result = await context
-                  .getClient({ apiVersion: "2021-06-07" })
-                  .fetch(
-                    `
-                        {
-                          "otherProductsCount": count(*[_type == "product" && (
-                            sku == $sku || 
-                            defined(variants) && $sku in variants[].sku
-                          ) && _id != $currentId]),
-                          "currentProductSku": *[_type == "product" && _id == $currentId].sku[0],
-                          "otherVariantsCount": count(*[_type == "product" && _id == $currentId].variants[sku == $sku && @ != $variantPath])
+                Rule.required(),
+                Rule.max(16).error("SKU must be at maximum 16 characters"),
+                Rule.regex(/^[a-zA-Z0-9-]*$/).error(
+                    "SKU can only contain letters, numbers, and hyphens"
+                ),
+                Rule.custom(async (sku, context) => {
+                    if (!sku || typeof sku !== "string") return true;
+        
+                    // First check current document's variants for duplicates
+                    const variants: { sku: string }[] = context.document?.variants || [];
+                    const skuCount = variants.filter(v => v.sku === sku).length;
+        
+                    // Then check other products
+                    const result = await context.getClient({ apiVersion: "2021-06-07" }).fetch(
+                        `{
+                            "otherProductsCount": count(*[
+                                _type == "product" && 
+                                _id != $currentId && 
+                                (sku == $sku || defined(variants) && $sku in variants[].sku)
+                            ]),
+                            "currentProductSku": *[_type == "product" && _id == $currentId][0].sku
                         }`,
-                    {
-                      sku,
-                      currentId: context.document?._id,
-                      variantPath: context.path?.slice(-2)[0], // Gets the current variant index
-                    }
-                  );
-
-                // Check if SKU matches the main product SKU or any other variant
-                return (
-                  (result.otherProductsCount === 0 &&
-                    result.currentProductSku !== sku &&
-                    result.otherVariantsCount === 0) ||
-                  "This SKU is already in use"
-                );
-              }),
+                        {
+                            sku,
+                            currentId: context.document?._id
+                        }
+                    );
+        
+                    console.log({
+                        validating_sku: sku,
+                        sku_count_in_current_doc: skuCount,
+                        other_products: result.otherProductsCount,
+                        current_product_sku: result.currentProductSku,
+                        all_skus: variants.map(v => v.sku)
+                    });
+        
+                    const hasDuplicate = 
+                        result.otherProductsCount > 0 ||
+                        result.currentProductSku === sku ||
+                        skuCount > 1;
+        
+                    console.log('Has duplicate:', hasDuplicate);
+        
+                    return !hasDuplicate || "This SKU is already in use";
+                }),
             ],
-          }),
+        }),
           defineField({
             name: "variantDescription",
             title: "Description",
