@@ -23,7 +23,7 @@ export const variantsFields = [
             title: "Variant",
             type: "string",
             readOnly: true,
-            validation: Rule => Rule.required(),
+            validation: (Rule) => Rule.required(),
           }),
           defineField({
             name: "options",
@@ -64,7 +64,7 @@ export const variantsFields = [
                 },
               }),
             ],
-          }),          
+          }),
           defineField({
             name: "variantProductName",
             title: "Variant Name",
@@ -76,21 +76,25 @@ export const variantsFields = [
             title: "SKU",
             type: "string",
             validation: (Rule) => [
-                Rule.required(),
-                Rule.max(16).error("SKU must be at maximum 16 characters"),
-                Rule.regex(/^[a-zA-Z0-9-]*$/).error(
-                    "SKU can only contain letters, numbers, and hyphens"
-                ),
-                Rule.custom(async (sku, context) => {
-                    if (!sku || typeof sku !== "string") return true;
-        
-                    // First check current document's variants for duplicates
-                    const variants: { sku: string }[] = context.document?.variants || [];
-                    const skuCount = variants.filter(v => v.sku === sku).length;
-        
-                    // Then check other products
-                    const result = await context.getClient({ apiVersion: "2021-06-07" }).fetch(
-                        `{
+              Rule.required(),
+              Rule.max(16).error("SKU must be at maximum 16 characters"),
+              Rule.regex(/^[a-zA-Z0-9-]*$/).error(
+                "SKU can only contain letters, numbers, and hyphens"
+              ),
+              Rule.custom(async (sku, context) => {
+                if (!sku || typeof sku !== "string") return true;
+
+                const variants = (context.document?.variants ?? []) as Array<{
+                  _key: string;
+                  sku?: string;
+                }>;
+
+                const skuCount = variants.filter((v) => v.sku === sku).length;
+
+                const result = await context
+                  .getClient({ apiVersion: "2021-06-07" })
+                  .fetch(
+                    `{
                             "otherProductsCount": count(*[
                                 _type == "product" && 
                                 _id != $currentId && 
@@ -98,31 +102,21 @@ export const variantsFields = [
                             ]),
                             "currentProductSku": *[_type == "product" && _id == $currentId][0].sku
                         }`,
-                        {
-                            sku,
-                            currentId: context.document?._id
-                        }
-                    );
-        
-                    console.log({
-                        validating_sku: sku,
-                        sku_count_in_current_doc: skuCount,
-                        other_products: result.otherProductsCount,
-                        current_product_sku: result.currentProductSku,
-                        all_skus: variants.map(v => v.sku)
-                    });
-        
-                    const hasDuplicate = 
-                        result.otherProductsCount > 0 ||
-                        result.currentProductSku === sku ||
-                        skuCount > 1;
-        
-                    console.log('Has duplicate:', hasDuplicate);
-        
-                    return !hasDuplicate || "This SKU is already in use";
-                }),
+                    {
+                      sku,
+                      currentId: context.document?._id,
+                    }
+                  );
+
+                const hasDuplicate =
+                  result.otherProductsCount > 0 ||
+                  result.currentProductSku === sku ||
+                  skuCount > 1;
+
+                return !hasDuplicate || "This SKU is already in use";
+              }),
             ],
-        }),
+          }),
           defineField({
             name: "variantDescription",
             title: "Description",
