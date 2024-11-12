@@ -18,7 +18,7 @@ interface Option {
 // Constants
 const MAX_OPTIONS = 3;
 const MAX_VALUES = 30;
-const MIN_VALUES = 1;
+const MIN_VALUES = 0;
 
 // Error Messages
 const ERROR_MESSAGES = {
@@ -221,11 +221,9 @@ export const optionsFields = [
     title: 'Product Options',
     type: 'array',
     validation: Rule => [
-      Rule.required(),
       Rule.max(MAX_OPTIONS).error(ERROR_MESSAGES.MAX_OPTIONS),
       Rule.custom((options: Option[] | undefined) => {
-        if (!Array.isArray(options)) return ERROR_MESSAGES.REQUIRED_ARRAY;
-        
+        if (!Array.isArray(options)) return true;
         const duplicates = checkDuplicates(options, option => option.name);
         return duplicates ? ERROR_MESSAGES.DUPLICATE_OPTIONS(duplicates) : true;
       }),

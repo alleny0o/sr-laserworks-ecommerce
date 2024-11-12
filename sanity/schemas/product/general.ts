@@ -30,35 +30,60 @@ export const generalFields = [
       ),
       Rule.custom(async (sku, context) => {
         if (!sku || typeof sku !== "string") return true;
-
-        // Check both other products AND our own variants
-        const result = await context
-          .getClient({ apiVersion: "2021-06-07" })
-          .fetch(
-            `
-                    {
-                        "otherProductsCount": count(*[
-                            _type == "product" && 
-                            _id != $currentId && 
-                            (sku == $sku || defined(variants) && $sku in variants[].sku)
-                        ]),
-                        "variantsWithSameSku": count(*[
-                            _type == "product" && 
-                            _id == $currentId
-                        ][0].variants[defined(sku) && sku == $sku])
-                    }`,
-            {
-              sku,
-              currentId: context.document?._id,
-            }
-          );
-
-        // Show error if other products use this SKU OR if any of our variants use it
-        return (
-          (result.otherProductsCount === 0 &&
-            result.variantsWithSameSku === 0) ||
-          "This SKU is already in use"
-        );
+  
+        try {
+          // Log validation attempt
+          console.log('Validating SKU:', sku);
+          console.log('Current document ID:', context.document?._id);
+  
+          const result = await context
+            .getClient({ apiVersion: "2021-06-07" })
+            .fetch(
+              `
+              {
+                "otherProductsCount": count(*[
+                  _type == "product" && 
+                  _id != $currentId && 
+                  (sku == $sku || defined(variants) && $sku in variants[].sku)
+                ]),
+                "variantsWithSameSku": count(*[
+                  _type == "product" && 
+                  _id == $currentId
+                ][0].variants[defined(sku) && sku == $sku]),
+                "debug": {
+                  "currentProduct": *[_type == "product" && _id == $currentId][0],
+                  "productsWithSku": *[
+                    _type == "product" && 
+                    (sku == $sku || defined(variants) && $sku in variants[].sku)
+                  ]{_id, title, sku, variants}
+                }
+              }`,
+              {
+                sku,
+                currentId: context.document?._id,
+              }
+            );
+  
+          // Log results
+          console.log('Validation results:', {
+            otherProductsCount: result.otherProductsCount,
+            variantsWithSameSku: result.variantsWithSameSku,
+            debug: result.debug
+          });
+  
+          // If either count is greater than 0, the SKU is in use
+          if (result.otherProductsCount > 0 || result.variantsWithSameSku > 0) {
+            console.log('SKU validation failed:', {
+              reason: result.otherProductsCount > 0 ? 'Found in other products' : 'Found in current product variants'
+            });
+            return 'This SKU is already in use';
+          }
+  
+          return true;
+        } catch (error) {
+          console.error('SKU validation error:', error);
+          return 'Error validating SKU uniqueness';
+        }
       }),
     ],
   }),

@@ -4,6 +4,13 @@ import { defineField, defineArrayMember } from "sanity";
 import { VscCombine } from "react-icons/vsc";
 import { GrSettingsOption } from "react-icons/gr";
 
+interface Variant {
+  variantPrice?: number;
+  variantCompareAtPrice?: number;
+  // ... other variant fields
+}
+
+
 export const variantsFields = [
   defineField({
     name: "variants",
@@ -127,14 +134,25 @@ export const variantsFields = [
             name: "variantPrice",
             title: "Price",
             type: "number",
-            validation: (Rule) => Rule.required(),
+            validation: (Rule) => Rule.required().positive(),
             readOnly: false,
           }),
           defineField({
             name: "variantCompareAtPrice",
             title: "Compare-At-Price",
             type: "number",
-            validation: (Rule) => Rule.min(0),
+            validation: Rule => [
+              Rule.positive().error('Must be a positive number'),
+              Rule.custom((compareAtPrice, context) => {
+                const parent = context.parent as Variant;
+                const price = parent?.variantPrice;
+                if (compareAtPrice === undefined || compareAtPrice === null) return true;
+                if (!price) return true;
+                return typeof price === 'number' && compareAtPrice > price 
+                  ? true 
+                  : 'Must be greater than price';
+              })
+            ],
             readOnly: false,
           }),
           defineField({
@@ -148,7 +166,7 @@ export const variantsFields = [
             title: "Max Order Quantity",
             type: "number",
             initialValue: 0,
-            validation: (Rule) => Rule.min(0),
+            validation: (Rule) => Rule.min(0).required().integer(),
             readOnly: false,
           }),
           defineField({
@@ -158,6 +176,52 @@ export const variantsFields = [
             components: {
               input: MediaReferenceInput,
             },
+          }),
+          defineField({
+            name: "showForm",
+            title: "Show Customization Form",
+            type: "boolean",
+            initialValue: false,
+          }),
+          defineField({
+            name: "variantShippingInfo",
+            title: "Variant-Specific Shipping Info",
+            description: "Only fill if different from main product",
+            type: "object",
+            fields: [
+              defineField({
+                name: "weight",
+                title: "Weight (in grams)",
+                type: "number",
+                validation: Rule => Rule.positive(),
+                description: "Only if different from main product"
+              }),
+              defineField({
+                name: "dimensions",
+                title: "Dimensions",
+                type: "object",
+                fields: [
+                  defineField({
+                    name: "length",
+                    title: "Length (cm)",
+                    type: "number",
+                    validation: Rule => Rule.positive()
+                  }),
+                  defineField({
+                    name: "width",
+                    title: "Width (cm)",
+                    type: "number",
+                    validation: Rule => Rule.positive()
+                  }),
+                  defineField({
+                    name: "height",
+                    title: "Height (cm)",
+                    type: "number",
+                    validation: Rule => Rule.positive()
+                  }),
+                ]
+              }),
+            ]
           }),
         ],
         preview: {

@@ -148,7 +148,7 @@ export function GenerateVariants(props: ArrayOfObjectsInputProps) {
           _type: 'variant' as const,
           _key: variantKey,
           options: optionsWithKeys,
-          variantMaxOrderQuantity: 1,
+          variantMaxOrderQuantity: 0,
           variantProductName,
           variantPrice,
           variantStock: 0,

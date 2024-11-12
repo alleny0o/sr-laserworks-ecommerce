@@ -7,6 +7,9 @@ import { pricingFields } from "../schemas/product/pricing";
 import { mediaFields } from "../schemas/product/media";
 import { optionsFields } from "../schemas/product/options";
 import { variantsFields } from "../schemas/product/variants";
+import { shippingFields } from "../schemas/product/shipping";
+import { formFields } from "../schemas/product/customizationForm";
+import { seoFields } from "../schemas/product/seo";
 
 export const productType = defineType({
   name: "product",
@@ -31,8 +34,11 @@ export const productType = defineType({
   fields: [
     ...generalFields,
     ...pricingFields,
+    ...shippingFields,
     ...mediaFields,
     ...optionsFields,
-    ...variantsFields
+    ...variantsFields,
+    ...formFields,
+    ...seoFields,
   ],
 });
